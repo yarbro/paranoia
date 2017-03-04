@@ -55,7 +55,7 @@ module Paranoia
 
   module Callbacks
     def self.extended(klazz)
-      [:restore, :real_destroy].each do |callback_name|
+      [:restore, :soft_destroy, :real_destroy].each do |callback_name|
         klazz.define_callbacks callback_name
 
         klazz.define_singleton_method("before_#{callback_name}") do |*args, &block|
@@ -75,7 +75,7 @@ module Paranoia
 
   def destroy
     transaction do
-      run_callbacks(:destroy) do
+      run_callbacks(:soft_destroy) do
         result = delete
         next result unless result && ActiveRecord::VERSION::STRING >= '4.2'
         each_counter_cached_associations do |association|

@@ -75,16 +75,18 @@ module Paranoia
 
   def destroy
     transaction do
-      run_callbacks(:soft_destroy, :destroy) do
-        result = delete
-        next result unless result && ActiveRecord::VERSION::STRING >= '4.2'
-        each_counter_cached_associations do |association|
-          foreign_key = association.reflection.foreign_key.to_sym
-          next if destroyed_by_association && destroyed_by_association.foreign_key.to_sym == foreign_key
-          next unless send(association.reflection.name)
-          association.decrement_counters
+      run_callbacks(:soft_destroy) do
+        run_callbacks(:destroy) do
+          result = delete
+          next result unless result && ActiveRecord::VERSION::STRING >= '4.2'
+          each_counter_cached_associations do |association|
+            foreign_key = association.reflection.foreign_key.to_sym
+            next if destroyed_by_association && destroyed_by_association.foreign_key.to_sym == foreign_key
+            next unless send(association.reflection.name)
+            association.decrement_counters
+          end
+          result
         end
-        result
       end
     end
   end
